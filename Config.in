@@ -1,0 +1,5 @@
+config BR2_PACKAGE_BENCHMARK
+	bool "benchmark"
+	depends on BR2_riscv
+	help
+	  benchmark
