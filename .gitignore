@@ -1,2 +1,5 @@
 # nncase tmp
 tools/tmp/*
+
+# gen release file
+benchmark/*
