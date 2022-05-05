@@ -12,10 +12,10 @@ Benchmark program for k510.
 
 ## Model Convert
 
-​	Model converted by [nncase]([kendryte/nncase: Open deep learning compiler stack for Kendryte K210 AI accelerator (github.com)](https://github.com/kendryte/nncase)).
+​	Model converted by [nncase](https://github.com/kendryte/nncase).
 
 ​	nncase version v1.5.0
 
 ​	python version 3.9
 
-​	[onnx-simplifier]([daquexian/onnx-simplifier: Simplify your onnx model (github.com)](https://github.com/daquexian/onnx-simplifier)) 0.3.8
+​	[onnx-simplifier](https://github.com/daquexian/onnx-simplifier) 0.3.8
