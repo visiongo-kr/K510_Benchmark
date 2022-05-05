@@ -29,6 +29,7 @@
 #include <linux/videodev2.h>
 #include <ctime>
 #include "yolofastv2.h"
+#include "ssdmobilenetv1.h"
 
 struct video_info dev_info[2];
 std::mutex mtx;
@@ -91,8 +92,38 @@ int main(int argc, char *argv[])
     end = clock();
     {
         double ms = (double)(end - start)/1000;
-        printf("Use time is: %f\n", ms / 5000);
+        printf("Use time is: %f\n", ms / 1000);
     }
+    delete yolofast;
+
+    SSDMobileNetV1 *ssdmobile = nullptr;
+    ssdmobile = new SSDMobileNetV1({320, 320, 3}, {1, 2034, 4}, {1, 2034, 91});
+    ssdmobile->load_model("./mobilenetssd.kmodel");
+    ssdmobile->prepare_memory();
+
+    // preheat
+    for (int i = 0; i < 100; i++) {
+        ssdmobile->set_input(0);
+        ssdmobile->set_output();
+        ssdmobile->run();
+        ssdmobile->get_output();
+    }
+
+    start = clock();
+
+    for (int i = 0; i < 1000; i++) {
+        ssdmobile->set_input(0);
+        ssdmobile->set_output();
+        ssdmobile->run();
+        ssdmobile->get_output();
+    }
+
+    end = clock();
+    {
+        double ms = (double)(end - start)/1000;
+        printf("Use time is: %f\n", ms / 1000);
+    }
+    delete ssdmobile;
 
     for(int i = 0; i < DRM_BUFFERS_COUNT; i++) {
         drm_destory_dumb(&drm_dev.drm_bufs[i]);
