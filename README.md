@@ -6,8 +6,8 @@ Benchmark program for k510.
 
 | Network                                                      | DataSet   | Resolution | Time(ms) |
 | ------------------------------------------------------------ | --------- | ---------- | -------- |
-| [YoloFastV2]([dog-qiuqiu/Yolo-FastestV2: Based on Yolo's low-power, ultra-lightweight universal target detection algorithm, the parameter is only 250k, and the speed of the smart phone mobile terminal can reach ~300fps+ (github.com)](https://github.com/dog-qiuqiu/Yolo-FastestV2)) | COCO 2017 | 352x352    | 98       |
-| [SSD mobilenet_V1]([TensorFlow Hub (tfhub.dev)](https://tfhub.dev/iree/lite-model/ssd_mobilenet_v1_100_320/fp32/default/1)) | COCO 2017 | 320x320    | 7        |
+| [YoloFastV2](https://github.com/dog-qiuqiu/Yolo-FastestV2) | COCO 2017 | 352x352    | 98       |
+| [SSD mobilenet_V1](https://tfhub.dev/iree/lite-model/ssd_mobilenet_v1_100_320/fp32/default/1) | COCO 2017 | 320x320    | 7        |
 | ...                                                          | ...       | ...        |          |
 
 ## Model Convert
