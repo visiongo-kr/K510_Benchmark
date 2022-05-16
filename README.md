@@ -19,3 +19,9 @@ Benchmark program for k510.
 ​	python version 3.9
 
 ​	[onnx-simplifier](https://github.com/daquexian/onnx-simplifier) 0.3.8
+
+# Usage
+
+1. run general.sh and it will generate a folder benchmark
+2. and copy the folder benchmark to k510_buildroot/package
+3. add 'BR2_PACKAGE_BENCHMARK=y' in file k510_buildroot/configs/k510_crb_lp3_v1_2_defconfig
