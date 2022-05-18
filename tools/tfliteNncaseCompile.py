@@ -3,11 +3,15 @@
 @File    :   tfliteNncaseCompile.py
 @Time    :   2022/04/28 22:04:33
 @Author  :   lijunyu
-@Version :   0.0.1
+@Version :   0.0.2
 @Desc    :   None
 """
 
+from turtle import st
 import nncase
+import argparse
+
+from numpy import uint8
 
 def read_model_file(model_file):
     with open(model_file, 'rb') as f:
@@ -15,7 +19,11 @@ def read_model_file(model_file):
     return model_content
 
 def main():
-    model='../model/MobilenetSSD/lite-model_ssd_mobilenet_v1_100_320_fp32_default_1.tflite'
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--input_model', type=str, required=True, help='path to tflite model')
+    parser.add_argument('--output_path', type=str, default='test.kmodel', help='output kmodel')
+    args = parser.parse_args()
+    model=args.input_model
     target = 'k510'
 
     # compile_options
@@ -40,7 +48,7 @@ def main():
 
     # kmodel
     kmodel = compiler.gencode_tobytes()
-    with open('test.kmodel', 'wb') as f:
+    with open(args.output_path, 'wb') as f:
         f.write(kmodel)
 
 if __name__ == '__main__':
