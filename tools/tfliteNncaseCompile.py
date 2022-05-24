@@ -38,7 +38,6 @@ def main():
 
     # import_options
     import_options = nncase.ImportOptions()
-
     # import
     model_content = read_model_file(model)
     compiler.import_tflite(model_content, import_options)

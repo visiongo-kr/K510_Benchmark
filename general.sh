@@ -19,3 +19,7 @@ cp benchmark.mk ./$releasePath
 cp Config.in ./$releasePath
 # copy shell
 cp benchmark.sh ./$releasePath
+# copy drm
+cp -r ./drm ./$releasePath
+# copy include
+cp -r ./include ./$releasePath
