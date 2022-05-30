@@ -27,6 +27,22 @@ std::vector<T> read_binary_file(const char *file_name)
     return vec;
 }
 
+size_t InferenceKmodel::getTypeSize(datatype_t dataType)
+{
+    switch (dataType)
+    {
+    case dt_uint8:
+        return sizeof(uint8_t);
+        break;
+    case dt_float32:
+        return sizeof(float);
+        break;
+    
+    default:
+        break;
+    }
+}
+
 InferenceKmodel::InferenceKmodel(vector<struct data_shape> inputShapes, vector<struct data_shape> outputShapes,
                                 datatype_t inputDataType, datatype_t outputDataType)
 :inputShapes(inputShapes), outputShapes(outputShapes), inputDataType(inputDataType), outputDataType(outputDataType)
@@ -38,6 +54,9 @@ InferenceKmodel::InferenceKmodel(vector<struct data_shape> inputShapes, vector<s
     virtualAddrKmodelInput = new char *[inputShapes.size()];
     outputPaAddr = new uint32_t[outputShapes.size()];
     allocAlignMemNetInput = new struct share_memory_alloc_align_args[inputShapes.size()];
+
+    inputDataTypeSize = getTypeSize(inputDataType);
+    outputDataTypeSize = getTypeSize(outputDataType);
 
     shareMemory = open(SHARE_MEMORY_DEV, O_RDWR);
     if(shareMemory < 0) 
@@ -57,16 +76,16 @@ void InferenceKmodel::prepareMemory()
 {
     inputAllSize = 0;
     for (int i = 0; i < inputShapes.size(); i++) {
-        inputSize[i] = inputShapes[i].weight * inputShapes[i].height * (inputShapes[i].channel + 1);
+        inputSize[i] = inputShapes[i].width * inputShapes[i].height * (inputShapes[i].channel + 1) * inputDataTypeSize;
         inputAllSize += inputSize[i];
     }
     outputAllSize = 0;
     for (int i = 0; i < outputShapes.size(); i++) {
-        outputSize[i] = outputShapes[i].weight * outputShapes[i].height * outputShapes[i].channel;
+        outputSize[i] = outputShapes[i].width * outputShapes[i].height * outputShapes[i].channel * outputDataTypeSize;
         outputAllSize += outputSize[i];
     }
 
-    allocAlignMemNetOutput.size = outputAllSize;
+    allocAlignMemNetOutput.size = (outputAllSize + 4095) & (~4095);
     allocAlignMemNetOutput.alignment = MEMORY_TEST_BLOCK_ALIGN;
     allocAlignMemNetOutput.phyAddr = 0;
     if (ioctl(shareMemory, SHARE_MEMORY_ALIGN_ALLOC, &allocAlignMemNetOutput) < 0) {
@@ -85,7 +104,7 @@ void InferenceKmodel::prepareMemory()
     }
 
     for(uint32_t i = 0; i < inputShapes.size(); i++) {
-        allocAlignMemNetInput[i].size = inputSize[i];
+        allocAlignMemNetInput[i].size = (inputSize[i] + 4095) & (~4095);
         allocAlignMemNetInput[i].alignment = MEMORY_TEST_BLOCK_ALIGN;
         allocAlignMemNetInput[i].phyAddr = 0;
 
@@ -106,8 +125,8 @@ void InferenceKmodel::setInput(uint32_t index)
     auto in_shape = interpKmodel.input_shape(index);
 
     auto input_tensor = host_runtime_tensor::create(inputDataType, in_shape,
-        { (gsl::byte *)virtualAddrKmodelInput[index], 
-        inputShapes[index].weight * inputShapes[index].height * inputShapes[index].channel * sizeof(float)},
+        { (gsl::byte *)virtualAddrKmodelInput[index],
+        inputShapes[index].width * inputShapes[index].height * inputShapes[index].channel * inputDataTypeSize },
         false, hrt::pool_shared, allocAlignMemNetInput[index].phyAddr)
                             .expect("cannot create input tensor");
     interpKmodel.input_tensor(index, input_tensor).expect("cannot set input tensor");

@@ -30,6 +30,7 @@
 #include <ctime>
 #include "yolofastv2.h"
 #include "ssdmobilenetv1.h"
+#include "inference_kmodel.h"
 
 struct video_info dev_info[2];
 std::mutex mtx;
@@ -65,6 +66,8 @@ int main(int argc, char *argv[])
     sigfillset(&sa.sa_mask);
     sigaction(SIGINT, &sa, NULL);
     drm_init();
+    
+    int run_count = 100;
 
     YoloFastV2 *yolofast = nullptr;
     yolofast = new YoloFastV2({352, 352, 3}, {22, 22, 95}, {11, 11, 95});
@@ -82,7 +85,7 @@ int main(int argc, char *argv[])
     clock_t start, end;
     start = clock();
 
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < run_count; i++) {
         yolofast->set_input(0);
         yolofast->set_output();
         yolofast->run();
@@ -92,7 +95,7 @@ int main(int argc, char *argv[])
     end = clock();
     {
         double ms = (double)(end - start)/1000;
-        printf("Use time is: %f\n", ms / 1000);
+        printf("Use time is: %f\n", ms / run_count);
     }
     delete yolofast;
 
@@ -111,7 +114,7 @@ int main(int argc, char *argv[])
 
     start = clock();
 
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < run_count; i++) {
         ssdmobile->set_input(0);
         ssdmobile->set_output();
         ssdmobile->run();
@@ -121,9 +124,41 @@ int main(int argc, char *argv[])
     end = clock();
     {
         double ms = (double)(end - start)/1000;
-        printf("Use time is: %f\n", ms / 1000);
+        printf("Use time is: %f\n", ms / run_count);
     }
     delete ssdmobile;
+
+    vector<struct data_shape> inputShapes = {{1280, 736, 3}};
+    vector<struct data_shape> outputShapes = {{80, 46, 36}, {40, 23, 36}};
+    datatype_t inputDataType = dt_float32;
+    datatype_t outputDataType = dt_float32;
+    inferencekmodel::InferenceKmodel *inf = new inferencekmodel::InferenceKmodel(inputShapes, outputShapes, inputDataType, outputDataType);
+    inf->loadKmodel("./car.kmodel");
+    inf->prepareMemory();
+
+    // preheat
+    for (int i = 0; i < 100; i++) {
+        inf->setInput(0);
+        inf->setOutput();
+        inf->run();
+        inf->getOutput();
+    }
+
+    start = clock();
+
+    for (int i = 0; i < run_count; i++) {
+        inf->setInput(0);
+        inf->setOutput();
+        inf->run();
+        inf->getOutput();
+    }
+
+    end = clock();
+    {
+        double ms = (double)(end - start)/1000;
+        printf("Use time is: %f\n", ms / run_count);
+    }
+    delete inf;
 
     for(int i = 0; i < DRM_BUFFERS_COUNT; i++) {
         drm_destory_dumb(&drm_dev.drm_bufs[i]);

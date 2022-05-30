@@ -29,7 +29,7 @@ struct share_memory_alloc_align_args {
 };
 
 struct data_shape {
-    uint32_t weight;
+    uint32_t width;
     uint32_t height;
     uint32_t channel;
 };

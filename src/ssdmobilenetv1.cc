@@ -45,9 +45,9 @@ SSDMobileNetV1::SSDMobileNetV1(struct data_shape input_shape,
 
 void SSDMobileNetV1::prepare_memory()
 {
-    input_size = ((input_shape.weight * input_shape.height * (input_shape.channel + 1) * sizeof(float) + 4095) & (~4095));
-    output_size[0] = (output_shape0.weight * output_shape0.height  * output_shape0.channel  * sizeof(float));
-    output_size[1] = (output_shape1.weight * output_shape1.height  * output_shape1.channel  * sizeof(float));
+    input_size = ((input_shape.width * input_shape.height * (input_shape.channel + 1) * sizeof(float) + 4095) & (~4095));
+    output_size[0] = (output_shape0.width * output_shape0.height  * output_shape0.channel  * sizeof(float));
+    output_size[1] = (output_shape1.width * output_shape1.height  * output_shape1.channel  * sizeof(float));
     output_all_size = ((output_size[0] + output_size[1] + 4095) & (~4095));
 
     allocAlignMemSSDMobileNetV1Output.size = output_all_size;
@@ -94,7 +94,7 @@ void SSDMobileNetV1::set_input(uint32_t index)
     auto in_shape = interp_ssdmobilenetv1.input_shape(index);
 
     auto input_tensor = host_runtime_tensor::create(dt_float32, in_shape,
-        { (gsl::byte *)virtual_addr_input[index], input_shape.weight * input_shape.height * input_shape.channel * sizeof(float)},
+        { (gsl::byte *)virtual_addr_input[index], input_shape.width * input_shape.height * input_shape.channel * sizeof(float)},
         false, hrt::pool_shared, allocAlignMemSSDMobileNetV1Input[index].phyAddr)
                             .expect("cannot create input tensor");
     interp_ssdmobilenetv1.input_tensor(index, input_tensor).expect("cannot set input tensor");

@@ -49,9 +49,9 @@ YoloFastV2::YoloFastV2(struct data_shape input_shape,
 
 void YoloFastV2::prepare_memory()
 {
-    input_size = ((input_shape.weight * input_shape.height * (input_shape.channel + 1) * sizeof(float) + 4095) & (~4095));
-    output_size[0] = (output_shape0.weight * output_shape0.height  * output_shape0.channel  * sizeof(float));
-    output_size[1] = (output_shape1.weight * output_shape1.height  * output_shape1.channel  * sizeof(float));
+    input_size = ((input_shape.width * input_shape.height * (input_shape.channel + 1) * sizeof(float) + 4095) & (~4095));
+    output_size[0] = (output_shape0.width * output_shape0.height  * output_shape0.channel  * sizeof(float));
+    output_size[1] = (output_shape1.width * output_shape1.height  * output_shape1.channel  * sizeof(float));
     output_all_size = ((output_size[0] + output_size[1] + 4095) & (~4095));
 
     allocAlignMemYoloFastV2Output.size = output_all_size;
@@ -98,7 +98,7 @@ void YoloFastV2::set_input(uint32_t index)
     auto in_shape = interp_yolofastv2.input_shape(index);
 
     auto input_tensor = host_runtime_tensor::create(dt_float32, in_shape,
-        { (gsl::byte *)virtual_addr_input[index], input_shape.weight * input_shape.height * input_shape.channel * sizeof(float)},
+        { (gsl::byte *)virtual_addr_input[index], input_shape.width * input_shape.height * input_shape.channel * sizeof(float)},
         false, hrt::pool_shared, allocAlignMemYoloFastV2Input[index].phyAddr)
                             .expect("cannot create input tensor");
     interp_yolofastv2.input_tensor(index, input_tensor).expect("cannot set input tensor");

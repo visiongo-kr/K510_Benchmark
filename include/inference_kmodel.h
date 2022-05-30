@@ -49,11 +49,15 @@ private:
     vector<struct data_shape> outputShapes;
     datatype_t inputDataType;
     datatype_t outputDataType;
+    size_t inputDataTypeSize;
+    size_t outputDataTypeSize;
 
     struct share_memory_alloc_align_args allocAlignMemNetOutput;
     struct share_memory_alloc_align_args *allocAlignMemNetInput;
 
     float **outputs;
+
+    size_t getTypeSize(datatype_t dataType);
 public:
     char **virtualAddrKmodelOutputs;
     char **virtualAddrKmodelInput;
