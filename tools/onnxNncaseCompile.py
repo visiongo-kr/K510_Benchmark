@@ -12,6 +12,7 @@ import os
 import onnxsim
 import onnx
 import nncase
+import argparse 
 
 def parse_model_input_output(model_file):
     onnx_model = onnx.load(model_file)
@@ -56,7 +57,11 @@ def read_model_file(model_file):
 
 
 def main():
-    model_file = '../model/Yolo-Fast-V2/YoloFastV2.onnx'
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--input_model', type=str, required=True, help='path to onnx model')
+    parser.add_argument('--output_path', type=str, default='test.kmodel', help='output kmodel')
+    args = parser.parse_args()
+    model_file = args.input_model
     target = 'k510'
 
     # onnx simplify
