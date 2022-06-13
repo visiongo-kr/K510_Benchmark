@@ -60,6 +60,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--input_model', type=str, required=True, help='path to onnx model')
     parser.add_argument('--output_path', type=str, default='test.kmodel', help='output kmodel')
+    parser.add_argument('--quant_type', type=str, default=None, help='quant type')
+    parser.add_argument('--w_quant_type', type=str, default=None, help='w_quant_type')
     args = parser.parse_args()
     model_file = args.input_model
     target = 'k510'
@@ -73,6 +75,10 @@ def main():
     compile_options.dump_ir = True
     compile_options.dump_asm = True
     compile_options.dump_dir = 'tmp'
+    if args.quant_type != None:
+        compile_options.quant_type = args.quant_type
+    if args.w_quant_type != None:
+        compile_options.w_quant_type = args.w_quant_type
 
     # compiler
     compiler = nncase.Compiler(compile_options)
