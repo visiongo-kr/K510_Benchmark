@@ -22,7 +22,7 @@
 #include <sys/mman.h>
 
 #include <atomic>
-#include<vector>
+#include <vector>
 
 #include "k510_drm.h"
 #include "media_ctl.h"
@@ -32,109 +32,94 @@
 #include "ssdmobilenetv1.h"
 #include "inference_kmodel.h"
 
-struct video_info dev_info[2];
-std::mutex mtx;
-uint8_t drm_bufs_index = 0;
-uint8_t drm_bufs_argb_index = 0;
-struct drm_buffer *fbuf_yuv, *fbuf_argb;
-int obj_cnt;
-
-std::atomic<bool> quit(true);
-
-void fun_sig(int sig)
-{
-    if(sig == SIGINT)
-    {
-        quit.store(false);
-    }
-}
-
 int main(int argc, char *argv[])
 {
-    // std::cout << "case " << argv[0] << " build " << __DATE__ << " " << __TIME__ << std::endl;
-    // if (argc != 2)
-    // {
-    //     std::cerr << "Usage: " << argv[0] << " <.kmodel> <image_file>" << std::endl;
-    //     return -1;
-    // }
-
-    // kmodel_name = argv[1];
-
-    struct sigaction sa;
-    memset( &sa, 0, sizeof(sa) );
-    sa.sa_handler = fun_sig;
-    sigfillset(&sa.sa_mask);
-    sigaction(SIGINT, &sa, NULL);
-    drm_init();
-    
-    int run_count = 100;
-
-    YoloFastV2 *yolofast = nullptr;
-    yolofast = new YoloFastV2({352, 352, 3}, {22, 22, 95}, {11, 11, 95});
-    yolofast->load_model("./yolofast.kmodel");
-    yolofast->prepare_memory();
-
-    // preheat
-    for (int i = 0; i < 100; i++) {
-        yolofast->set_input(0);
-        yolofast->set_output();
-        yolofast->run();
-        yolofast->get_output();
+    std::cout << "case " << argv[0] << " build " << __DATE__ << " " << __TIME__ << std::endl;
+    /*
+     * 1, model path
+     * 2, input type
+     * 3, output type
+     * 4, input shape
+     * 5, output shape
+     * 6, run count
+     */
+    std::cout << argc << std::endl;
+    if (argc != 7) {
+        std::cerr << "1, model path\n2, input type\n3, output type\n4, input shape\n5, output shape\n6, run count" << std::endl;
+        return -1;
     }
+    char *kmodel_name = argv[1];
+    printf("%s\n", kmodel_name);
+    // get input type
+    datatype_t inputDataType;
+    switch (argv[2][0]) {
+        case '0':
+            printf("float32\n");
+            inputDataType = dt_float32;
+            break;
+        case '1':
+            printf("uint8\n");
+            inputDataType = dt_uint8;
+            break;
+    }
+    // get output type
+    datatype_t outputDataType;
+    switch (argv[3][0]) {
+        case '0':
+            printf("float32\n");
+            outputDataType = dt_float32;
+            break;
+        case '1':
+            printf("uint8\n");
+            outputDataType = dt_uint8;
+            break;
+    }
+    uint32_t read_shape[3];
+    // get input shape
+    vector<struct data_shape> inputShapes;
+    for (int i = 0, j = 0; argv[4][i] != 0; i++) {
+        if (argv[4][i] >= '0' && argv[4][i] <= '9') {
+            uint32_t a = 0;
+            sscanf(&argv[4][i], "%d", &a);
+            while (argv[4][i + 1] >= '0' && argv[4][i + 1] <= '9') i++;
+            read_shape[j] = a;
+            j++;
+            if (j == 3) {
+                inputShapes.push_back({read_shape[0], read_shape[1], read_shape[2]});
+                j = 0;
+            }
+            printf("%d-", a);
+        }
+    }
+    printf("\n");
+    // get output shape
+    vector<struct data_shape> outputShapes;
+    for (int i = 0, j = 0; argv[5][i] != 0; i++) {
+        if (argv[5][i] >= '0' && argv[5][i] <= '9') {
+            int a = 0;
+            sscanf(&argv[5][i], "%d", &a);
+            while (argv[5][i + 1] >= '0' && argv[5][i + 1] <= '9') i++;
+            read_shape[j] = a;
+            j++;
+            if (j == 3) {
+                outputShapes.push_back({read_shape[0], read_shape[1], read_shape[2]});
+                j = 0;
+            }
+            printf("%d-", a);
+        }
+    }
+    printf("\n");
+    int run_count = 0;
+    sscanf(argv[6], "%d", &run_count);
+    printf("%d\n", run_count);
 
     clock_t start, end;
     start = clock();
 
-    for (int i = 0; i < run_count; i++) {
-        yolofast->set_input(0);
-        yolofast->set_output();
-        yolofast->run();
-        yolofast->get_output();
-    }
-
-    end = clock();
-    {
-        double ms = (double)(end - start)/1000;
-        printf("Use time is: %f\n", ms / run_count);
-    }
-    delete yolofast;
-
-    SSDMobileNetV1 *ssdmobile = nullptr;
-    ssdmobile = new SSDMobileNetV1({320, 320, 3}, {1, 2034, 4}, {1, 2034, 91});
-    ssdmobile->load_model("./mobilenetssd.kmodel");
-    ssdmobile->prepare_memory();
-
-    // preheat
-    for (int i = 0; i < 100; i++) {
-        ssdmobile->set_input(0);
-        ssdmobile->set_output();
-        ssdmobile->run();
-        ssdmobile->get_output();
-    }
-
-    start = clock();
-
-    for (int i = 0; i < run_count; i++) {
-        ssdmobile->set_input(0);
-        ssdmobile->set_output();
-        ssdmobile->run();
-        ssdmobile->get_output();
-    }
-
-    end = clock();
-    {
-        double ms = (double)(end - start)/1000;
-        printf("Use time is: %f\n", ms / run_count);
-    }
-    delete ssdmobile;
-
-    vector<struct data_shape> inputShapes = {{1280, 736, 3}};
-    vector<struct data_shape> outputShapes = {{80, 46, 36}, {40, 23, 36}};
-    datatype_t inputDataType = dt_float32;
-    datatype_t outputDataType = dt_float32;
     inferencekmodel::InferenceKmodel *inf = new inferencekmodel::InferenceKmodel(inputShapes, outputShapes, inputDataType, outputDataType);
-    inf->loadKmodel("./car.kmodel");
+    inf->loadKmodel(kmodel_name);
     inf->prepareMemory();
+    printf("prepare successed!\n");
 
     // preheat
     for (int i = 0; i < 100; i++) {
@@ -156,16 +141,9 @@ int main(int argc, char *argv[])
     end = clock();
     {
         double ms = (double)(end - start)/1000;
-        printf("Use time is: %f\n", ms / run_count);
+        printf("[%s]Use time is: %f\n", kmodel_name, ms / run_count);
     }
     delete inf;
-
-    for(int i = 0; i < DRM_BUFFERS_COUNT; i++) {
-        drm_destory_dumb(&drm_dev.drm_bufs[i]);
-    }
-    for(int i = 0; i < DRM_BUFFERS_COUNT; i++) {
-        drm_destory_dumb(&drm_dev.drm_bufs_argb[i]);
-    }
     
     return 0;
 }
