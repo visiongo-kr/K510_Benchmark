@@ -8,7 +8,7 @@ set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3")
 set(CMAKE_CXX_FLAGS_RELEASE "-O2 -s")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
 
-set(SRC ./src/main.cc ./src/yolofastv2.cc ./src/ssdmobilenetv1.cc ./src/inference_kmodel.cc ./drm/k510_drm.c)
+set(SRC ./src/main.cc ./src/inference_kmodel.cc ./drm/k510_drm.c)
 # set(bin benchmark)
 set(script ./benchmark.sh)
 set(input model/Yolo-Fast-V2/yolofast.kmodel model/MobilenetSSD/mobilenetssd.kmodel)
