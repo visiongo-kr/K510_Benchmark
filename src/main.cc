@@ -28,8 +28,6 @@
 #include "media_ctl.h"
 #include <linux/videodev2.h>
 #include <ctime>
-#include "yolofastv2.h"
-#include "ssdmobilenetv1.h"
 #include "inference_kmodel.h"
 
 int main(int argc, char *argv[])
