@@ -60,6 +60,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--input_model', type=str, required=True, help='path to onnx model')
     parser.add_argument('--output_path', type=str, default='test.kmodel', help='output kmodel')
+    parser.add_argument('--input_type', type=str, default='float32', help='model input type')
+    parser.add_argument('--output_type', type=str, default='float32', help='model output type')
     parser.add_argument('--quant_type', type=str, default=None, help='quant type')
     parser.add_argument('--w_quant_type', type=str, default=None, help='w_quant_type')
     args = parser.parse_args()
@@ -79,6 +81,8 @@ def main():
         compile_options.quant_type = args.quant_type
     if args.w_quant_type != None:
         compile_options.w_quant_type = args.w_quant_type
+    compile_options.input_type = args.input_type
+    compile_options.output_type = args.output_type
 
     # compiler
     compiler = nncase.Compiler(compile_options)
